@@ -1,87 +1,87 @@
-const prompt = require('prompt');
+const readline = require('readline');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
 // initalize board and game
 var Game = function() {
-  this.board = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, ];
+  this.board = [ [ '0,0', '0,1', '0,2'], ['1,0', '1,1', '1,2'], ['2,0', '2,1', '2,2'] ];
   this.round = 0;
   this.player1 = 'Player 1';
   this.player2 = 'Player 2';
   this.currentPlayer = this.player1;
+
+  this.displayBoard();
+  this.promptMove();
 };
 
-Game.prototype.submitMove = function(input) {
-  // add user prompt code here
-  if (this.board.indexOf(input) === -1) {
-    console.log('invalid input, please try again');
-    // recurisvely call submitMove();
-  } else {
-    // mark X or O on the board depending on the currentPlayer
-    this.board[this.board.indexOf(input)] = this.currentPlayer === this.player1 ? 'X' : 'O';
-    // check if game has been won
-    if (this.detectWin(input)) {
-      console.log(`Congratulations ${this.currentPlayer} has won the game!`);
+Game.prototype.promptMove = function() {
+  rl.question(`${this.currentPlayer}, make your move by entering a number pairing: `, (input) => {
+    var row = parseInt(input[0]);
+    var col = parseInt(input[2]);
+    // check if valid move
+    if (!this.board[row] || !this.board[row][col] || this.board[row][col] === ' X ' || this.board[row][col] === ' O ') {
+      console.log('invalid input, please try again');
+      // recurisvely call promptMove();
+      this.promptMove();
+    } else {
+      // mark X or O on the board depending on the currentPlayer
+      this.board[row][col] = this.currentPlayer === this.player1 ? ' X ' : ' O ';
+      // check if game has been won
+      if (this.detectWin(row, col)) {
+        this.displayBoard();
+        console.log(`Congratulations ${this.currentPlayer}, you have won the game!`);
+        rl.close();
+      } else {
+        // check if draw
+        if (this.round === 8) {
+          this.displayBoard();
+          console.log("It's a draw, better luck next time!");
+          rl.close();
+        } else {
+          // switch current player value after turn
+          this.currentPlayer = this.currentPlayer === this.player1 ? this.player2 : this.player1;
+          // increase round after turn
+          this.round ++;
+          // display current game state
+          this.displayBoard();
+          // call promptMove
+          this.promptMove();
+        }
+      }
     }
-    // switch current player value after turn
-    this.currentPlayer = this.currentPlayer === this.player1 ? this.player2 : this.player1;
-    // increase round after turn
-    this.round ++;
-    // display current game state
-    this.display();
-  }
+  });
 };
 
-Game.prototype.display = function () {
+Game.prototype.displayBoard = function () {
   console.log(`
     Round: ${this.round}
-    Current Turn: ${this.currentPlayer}
 
-    | ${this.board[0]} | ${this.board[1]} | ${this.board[2]} |
-    | ${this.board[3]} | ${this.board[4]} | ${this.board[5]} |
-    | ${this.board[6]} | ${this.board[7]} | ${this.board[8]} |
+    ${this.board[0][0]} | ${this.board[0][1]} | ${this.board[0][2]}
+    ---------------
+    ${this.board[1][0]} | ${this.board[1][1]} | ${this.board[1][2]}
+    ---------------
+    ${this.board[2][0]} | ${this.board[2][1]} | ${this.board[2][2]}
     `);
 };
 
-Game.prototype.detectWin = function (input, row, col) {
-  // check horizontals
-  if (this.board[0] && this.board[1] && this.board[2] === 'X' || this.board[0] && this.board[1] && this.board[2] === 'O') {
+Game.prototype.detectWin = function (row, col) {
+  // check same row
+  if (this.board[row][0] === this.board[row][1] && this.board[row][1] === this.board[row][2]) {
     return true;
   }
-  if (this.board[3] && this.board[4] && this.board[5] === 'X' || this.board[3] && this.board[4] && this.board[5] === 'O') {
+  // check same column
+  if (this.board[0][col] === this.board[1][col] && this.board[1][col] === this.board[2][col]) {
     return true;
   }
-  if (this.board[6] && this.board[1] && this.board[2] === 'X' || this.board[0] && this.board[1] && this.board[2] === 'O') {
+  // check diagonal
+  if (this.board[0][0] === this.board[1][1] && this.board[1][1] === this.board[2][2] || this.board[0][2] === this.board[1][1] && this.board[1][1] === this.board[2][0]) {
     return true;
   }
   return false;
 };
 
-// PROMPT PLAYERS FOR input
-// if (!player1) {
-//   prompt.start();
-//   console.log('Welcome to Tic-Tac-Toe! Please enter your names.');
-//   prompt.get(['player1', 'player2'], function (err, result) {
-//     console.log('Player 1: ' + result.player1);
-//     console.log('Player 2: ' + result.player2);
-//     //store player names
-//     player1 = result.player1;
-//     player2 = result.player2;
-//   });
-// }
-//
-// if (player1) {
-//   prompt.start();
-//   console.log(display);
-//   console.log(`It's your turn ${currentPlayer}, enter a number shown on the board above to select that`);
-//   prompt.get(['selection'], function (err, result) {
-//     console.log('Selection: ' + result.selection);
-//   });
-// }
-
-
-// Test data
+// run game
 var game = new Game();
-game.display();
-game.submitMove(5);
-game.submitMove(5);
-game.submitMove(2);
-game.submitMove('k');
